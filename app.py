@@ -40,17 +40,65 @@ def calcola_tf_idf(text, vocabulary, idf):
     tf = bow(text, vocabulary, len(vocabulary.keys()))
     w = np.multiply(np.log10(1+tf), np.log10(idf))
     return w
+def Rocchio(q0, R, NR):
+    a = 1
+    b = 0.8
+    c = 0.3
+
+    q0 = np.array(q0)
+    num_R = len(R)
+    num_NR = len(NR)
+    sum_R = np.zeros(q0.shape[0])
+    sum_NR = np.zeros(q0.shape[0])
+    qry_R = "SELECT tfidf FROM gdpr_enc WHERE "
+    qry_NR = "SELECT tfidf FROM gdpr_enc WHERE "
+
+    for r in R:
+        qry_R = qry_R + "id={r} OR"
+    qry_R = qry_R[:-3]
+
+    for r in NR:
+        qry_NR = qry_NR + "id={r} OR"
+    qry_NR = qry_NR[:-3]
+
+    with mydb.cursor() as mycursor:
+        mycursor.execute(qry_R)
+        myresult = mycursor.fetchall() 
+        for enc in myresult:
+            sum_R += np.array(enc[0])
+    
+    with mydb.cursor() as mycursor:
+        mycursor.execute(qry_NR)
+        myresult = mycursor.fetchall() 
+        for enc in myresult:
+            sum_NR += np.array(enc[0])
+    
+    q0 = a*q0 + (b/num_R)*sum_R + (c/num_NR)*sum_NR
+    return q0.tolist()
+
 
 @app.route('/')
 def hello_world(): 
     return 'Hello World!'
 
+@app.route('/encode', methods=['GET','POST'])
+def encoding():
+    text = request.form['qry']
+    tf_idf = calcola_tf_idf(text, my_vocabulary, my_idf)
+    return jsonify(tf_idf)
+
 @app.route('/search', methods=['GET','POST'])
 def search():
-    text = request.form['qry']
+    tf_idf = request.form['enc']
     inc = request.form['inc']
-    tf_idf = calcola_tf_idf(text, my_vocabulary, my_idf)
-    
+    dyn = request.form['dyn']
+
+    if dyn: #If dynamic search by Rocchio SMART is active
+        R = json.loads(request.form['R'])
+        NR = json.loads(request.form['NR'])
+        tf_idf = Rocchio(tf_idf, R, NR)
+
+
     with mydb.cursor(prepared=True) as mycursor:
         mycursor.execute("SELECT id, chapter, article, sub_article, article_title, tfidf FROM gdpr_enc")
         myresult = mycursor.fetchall()
@@ -61,7 +109,7 @@ def search():
         row = (l[0], f'{l[1]}.{l[2]} com.{l[3]} - {l[4]}', score)
         result.append(row)
     result.sort(key=lambda x: x[2], reverse=True)
-    return jsonify(result)
+    return jsonify([tf_idf,result])
 
 @app.route('/get_info', methods=['GET','POST'])
 def get_info():
