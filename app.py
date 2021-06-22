@@ -24,7 +24,7 @@ with open('./my_vocabulary.txt', 'r') as infile:
 with open('./my_idf.txt', 'r') as infile:
     my_idf = json.load(infile)
 
-nlp = spacy.load("en_core_web_lg")
+nlp = spacy.load("en_core_web_md")
 
 def bow(text, vocabulary, voc_len):
     tkn = nlp(text)
