@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
 from flask import request
-import mysql.connector
+import pymysql.cursors
 import spacy
 from flask import jsonify
 import json
@@ -12,11 +12,11 @@ import numpy as np
 app = Flask(__name__)
 CORS(app)
 
-mydb = mysql.connector.connect(
+mydb = pymysql.connect(
   host="db-mysql-ams3-72238-do-user-9409391-0.b.db.ondigitalocean.com",
   user="doadmin",
   password="s9gy3byw3ti4yeac",
-  database="defaultdb",
+  database="legal",
   port = 25060)
 
 with open('./my_vocabulary.txt', 'r') as infile:
