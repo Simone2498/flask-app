@@ -79,7 +79,7 @@ def Rocchio(q0, R, NR):
 
 @app.route('/')
 def hello_world(): 
-    return 'Hello World!'
+    return 'Hello World V.0!'
 
 @app.route('/encode', methods=['GET','POST'])
 def encoding():
