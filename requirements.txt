@@ -10,4 +10,4 @@ spacy
 scipy
 numpy
 pymysql
-en_core_web_md
+
