@@ -28,8 +28,8 @@ try:
     nlp = spacy.load("en_core_web_md")
 except OSError:
     #print('Downloading language model for the spaCy POS tagger\n'"(don't worry, this will only happen once)", file=stderr)
-    from spacy.cli import download
-    download("en_core_web_md")
+    #from spacy.cli import download
+    #download("en_core_web_md")
     nlp = spacy.load("en_core_web_md")
 
 
