@@ -10,5 +10,4 @@ spacy
 scipy
 numpy
 pymysql
-click
 
