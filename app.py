@@ -24,13 +24,13 @@ with open('./my_vocabulary.txt', 'r') as infile:
 with open('./my_idf.txt', 'r') as infile:
     my_idf = json.load(infile)
 
-#try:
-#    nlp = spacy.load("en_core_web_md")
-#except OSError:
-    #print('Downloading language model for the spaCy POS tagger\n'"(don't worry, this will only happen once)", file=stderr)
-    #from spacy.cli import download
-    #download("en_core_web_md")
-#    nlp = spacy.load("en_core_web_md")
+try:
+    nlp = spacy.load("en_core_web_md")
+except OSError:
+    print('Downloading language model for the spaCy POS tagger\n'"(don't worry, this will only happen once)")
+    from spacy.cli import download
+    download("en_core_web_md")
+    nlp = spacy.load("en_core_web_md")
 
 
 def bow(text, vocabulary, voc_len):
@@ -126,4 +126,5 @@ def get_info():
         myresult = mycursor.fetchall()
     return jsonify(myresult[0])
 
-
+if __name__=='__main__':
+    app.run()
