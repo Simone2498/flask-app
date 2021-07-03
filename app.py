@@ -61,26 +61,30 @@ def Rocchio(q0, R, NR):
     qry_NR = "SELECT tfidf FROM gdpr_enc WHERE "
 
     for r in R:
-        qry_R = qry_R + "id={r} OR"
-    qry_R = qry_R[:-3]
+        qry_R = qry_R + f"id={r} OR "
+    qry_R = qry_R[:-4]
 
     for r in NR:
-        qry_NR = qry_NR + "id={r} OR"
+        qry_NR = qry_NR + f"id={r} OR "
     qry_NR = qry_NR[:-3]
 
     with mydb.cursor() as mycursor:
         mycursor.execute(qry_R)
         myresult = mycursor.fetchall() 
         for enc in myresult:
-            sum_R += np.array(enc[0])
+            sum_R += np.array(json.loads(enc[0]))
     
     with mydb.cursor() as mycursor:
         mycursor.execute(qry_NR)
         myresult = mycursor.fetchall() 
         for enc in myresult:
-            sum_NR += np.array(enc[0])
+            sum_NR += np.array(json.loads(enc[0]))
     
-    q0 = a*q0 + (b/num_R)*sum_R + (c/num_NR)*sum_NR
+    q0 = a*q0
+    if(num_R!=0):
+        q0 += (b/num_R)*sum_R
+    if(num_NR!=0): #controlla se -
+        q0 -= (b/num_NR)*sum_NR
     return q0.tolist()
 
 
@@ -90,41 +94,44 @@ def hello_world():
 
 @app.route('/encode', methods=['GET','POST'])
 def encoding():
-    text = request.form['qry']
-    tf_idf = calcola_tf_idf(text, my_vocabulary, my_idf)
+    text = request.form.get('qry')
+    tf_idf = calcola_tf_idf(text, my_vocabulary, my_idf).tolist()
     return jsonify(tf_idf)
 
 @app.route('/search', methods=['GET','POST'])
 def search():
-    tf_idf = request.form['enc']
-    inc = request.form['inc']
-    dyn = request.form['dyn']
+    tf_idf = json.loads(request.form.get('enc'))
+    inc = int(request.form.get('inc'))
+    dyn = int(request.form.get('dyn'))
 
     if dyn: #If dynamic search by Rocchio SMART is active
-        R = json.loads(request.form['R'])
-        NR = json.loads(request.form['NR'])
+        R = json.loads(request.form.get('R'))
+        NR = json.loads(request.form.get('NR'))
         tf_idf = Rocchio(tf_idf, R, NR)
 
-
-    with mydb.cursor(prepared=True) as mycursor:
+    with mydb.cursor() as mycursor:
         mycursor.execute("SELECT id, chapter, article, sub_article, article_title, tfidf FROM gdpr_enc")
         myresult = mycursor.fetchall()
     
+    
     result = []
-    for _, l in myresult:
+    for l in myresult:
         score = 1 - spatial.distance.cosine(tf_idf, np.array(json.loads(l[5])))
         row = (l[0], f'{l[1]}.{l[2]} com.{l[3]} - {l[4]}', score)
         result.append(row)
+
     result.sort(key=lambda x: x[2], reverse=True)
+    
     return jsonify([tf_idf,result])
 
 @app.route('/get_info', methods=['GET','POST'])
 def get_info():
-    id = request.form['id']
-    with mydb.cursor(prepared=True) as mycursor:
+    id = request.form.get('id')
+    with mydb.cursor() as mycursor:
         mycursor.execute("SELECT id, chapter, chapter_title, article, article_title, sub_article, gdpr_text, href FROM gdpr_enc WHERE id = %s", (id,))
         myresult = mycursor.fetchall()
     return jsonify(myresult[0])
 
 if __name__=='__main__': 
-    app.run()
+    app.run(debug=True)
+    #print(encode())
