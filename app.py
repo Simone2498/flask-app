@@ -104,7 +104,7 @@ def search():
     inc = int(request.form.get('inc'))
     dyn = int(request.form.get('dyn'))
 
-    if dyn: #If dynamic search by Rocchio SMART is active
+    if dyn: #If dynamic search by Rocchio SMART is active#
         R = json.loads(request.form.get('R'))
         NR = json.loads(request.form.get('NR'))
         tf_idf = Rocchio(tf_idf, R, NR)
