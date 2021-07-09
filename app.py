@@ -88,10 +88,9 @@ def Rocchio(q0, R, NR):
         q0 += (b/num_R)*sum_R
     if(num_NR!=0): #controlla se -
         q0 -= (b/num_NR)*sum_NR
-		
-	mydb.close()
+	
+    mydb.close()
     return q0.tolist()
-
 
 @app.route('/')
 def hello_world(): 
