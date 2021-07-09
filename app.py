@@ -12,12 +12,14 @@ import numpy as np
 app = Flask(__name__)
 CORS(app)
 
-mydb = pymysql.connect(
-  host="db-mysql-ams3-72238-do-user-9409391-0.b.db.ondigitalocean.com",
-  user="doadmin",
-  password="s9gy3byw3ti4yeac",
-  database="legal",
-  port = 25060)
+
+def create_conn():
+	return pymysql.connect(
+	  host="db-mysql-ams3-72238-do-user-9409391-0.b.db.ondigitalocean.com",
+	  user="doadmin",
+	  password="s9gy3byw3ti4yeac",
+	  database="legal",
+	  port = 25060)
 
 with open('./my_vocabulary.txt', 'r') as infile:
     my_vocabulary = json.load(infile)
@@ -48,6 +50,7 @@ def calcola_tf_idf(text, vocabulary, idf):
     w = np.multiply(np.log10(1+tf), np.log10(idf))
     return w
 def Rocchio(q0, R, NR):
+	mydb = create_conn()
     a = 1
     b = 0.8
     c = 0.3
@@ -85,6 +88,8 @@ def Rocchio(q0, R, NR):
         q0 += (b/num_R)*sum_R
     if(num_NR!=0): #controlla se -
         q0 -= (b/num_NR)*sum_NR
+		
+	mydb.close()
     return q0.tolist()
 
 
@@ -108,11 +113,12 @@ def search():
         R = json.loads(request.form.get('R'))
         NR = json.loads(request.form.get('NR'))
         tf_idf = Rocchio(tf_idf, R, NR)
-
+	
+	mydb = create_conn()
     with mydb.cursor() as mycursor:
         mycursor.execute("SELECT id, chapter, article, sub_article, article_title, tfidf FROM gdpr_enc")
         myresult = mycursor.fetchall()
-    print('ciao')
+    mydb.close()
     
     result = []
     for l in myresult:
@@ -127,9 +133,11 @@ def search():
 @app.route('/get_info', methods=['GET','POST'])
 def get_info():
     id = request.form.get('id')
+	mydb = create_conn()
     with mydb.cursor() as mycursor:
         mycursor.execute("SELECT id, chapter, chapter_title, article, article_title, sub_article, gdpr_text, href FROM gdpr_enc WHERE id = %s", (id,))
         myresult = mycursor.fetchall()
+	mydb.close()
     return jsonify(myresult[0])
 
 if __name__=='__main__': 
