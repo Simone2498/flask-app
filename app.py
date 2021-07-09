@@ -50,7 +50,7 @@ def calcola_tf_idf(text, vocabulary, idf):
     w = np.multiply(np.log10(1+tf), np.log10(idf))
     return w
 def Rocchio(q0, R, NR):
-	mydb = create_conn()
+    mydb = create_conn()    
     a = 1
     b = 0.8
     c = 0.3
@@ -133,7 +133,7 @@ def search():
 @app.route('/get_info', methods=['GET','POST'])
 def get_info():
     id = request.form.get('id')
-	mydb = create_conn()
+    mydb = create_conn()
     with mydb.cursor() as mycursor:
         mycursor.execute("SELECT id, chapter, chapter_title, article, article_title, sub_article, gdpr_text, href FROM gdpr_enc WHERE id = %s", (id,))
         myresult = mycursor.fetchall()
