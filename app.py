@@ -112,7 +112,7 @@ def search():
     with mydb.cursor() as mycursor:
         mycursor.execute("SELECT id, chapter, article, sub_article, article_title, tfidf FROM gdpr_enc")
         myresult = mycursor.fetchall()
-    
+    print('ciao')
     
     result = []
     for l in myresult:
