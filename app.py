@@ -12,6 +12,8 @@ import numpy as np
 app = Flask(__name__)
 CORS(app)
 
+mydb = create_conn()
+mycursor = mydb.cursor()
 
 def create_conn():
 	return pymysql.connect(
@@ -94,7 +96,7 @@ def Rocchio(q0, R, NR):
 
 @app.route('/')
 def hello_world(): 
-    return 'Hello World V.0!'
+    return 'Hello World V.1!'
 
 @app.route('/encode', methods=['GET','POST'])
 def encoding():
@@ -113,13 +115,9 @@ def search():
         NR = json.loads(request.form.get('NR'))
         tf_idf = Rocchio(tf_idf, R, NR)
 	
-	mydb = create_conn()
-    print('connected')
-    with mydb.cursor() as mycursor:
-        mycursor.execute("SELECT id, chapter, article, sub_article, article_title, tfidf FROM gdpr_enc")
-        myresult = mycursor.fetchall()
-    mydb.close()
-    print('fetched')
+    mycursor.execute("SELECT id, chapter, article, sub_article, article_title, tfidf FROM gdpr_enc")
+    myresult = mycursor.fetchall()
+
     result = []
     for l in myresult:
         score = 1 - spatial.distance.cosine(tf_idf, np.array(json.loads(l[5])))
@@ -133,11 +131,10 @@ def search():
 @app.route('/get_info', methods=['GET','POST'])
 def get_info():
     id = request.form.get('id')
-    mydb = create_conn()
-    with mydb.cursor() as mycursor:
-        mycursor.execute("SELECT id, chapter, chapter_title, article, article_title, sub_article, gdpr_text, href FROM gdpr_enc WHERE id = %s", (id,))
-        myresult = mycursor.fetchall()
-	mydb.close()
+    
+    mycursor.execute("SELECT id, chapter, chapter_title, article, article_title, sub_article, gdpr_text, href FROM gdpr_enc WHERE id = %s", (id,))
+    myresult = mycursor.fetchall()
+	
     return jsonify(myresult[0])
 
 if __name__=='__main__': 
