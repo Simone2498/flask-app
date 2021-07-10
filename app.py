@@ -114,11 +114,12 @@ def search():
         tf_idf = Rocchio(tf_idf, R, NR)
 	
 	mydb = create_conn()
+    print('connected')
     with mydb.cursor() as mycursor:
         mycursor.execute("SELECT id, chapter, article, sub_article, article_title, tfidf FROM gdpr_enc")
         myresult = mycursor.fetchall()
     mydb.close()
-    
+    print('fetched')
     result = []
     for l in myresult:
         score = 1 - spatial.distance.cosine(tf_idf, np.array(json.loads(l[5])))
