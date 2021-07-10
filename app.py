@@ -12,16 +12,16 @@ import numpy as np
 app = Flask(__name__)
 CORS(app)
 
-mydb = create_conn()
-mycursor = mydb.cursor()
-
 def create_conn():
 	return pymysql.connect(
 	  host="db-mysql-ams3-72238-do-user-9409391-0.b.db.ondigitalocean.com",
 	  user="doadmin",
-	  password="s9gy3byw3ti4yeac",
+	  password="y78sjj6jcokz0yoe",
 	  database="legal",
 	  port = 25060)
+
+mydb = create_conn()
+mycursor = mydb.cursor()
 
 with open('./my_vocabulary.txt', 'r') as infile:
     my_vocabulary = json.load(infile)
@@ -136,6 +136,28 @@ def get_info():
     myresult = mycursor.fetchall()
 	
     return jsonify(myresult[0])
+
+@app.route('/key_search', methods=['GET','POST'])
+def key_search():
+    tf_idf = json.loads(request.form.get('enc'))
+    	
+    mycursor.execute("SELECT id, chapter, article, sub_article, article_title, tfidf FROM gdpr_enc")
+    myresult = mycursor.fetchall()
+
+    result = []
+    for l in myresult:
+        #calculate score
+        tf_idf = np.array(tf_idf)
+        db_ret = np.array(json.loads(l[5]))
+        score = db_ret[tf_idf>0].sum()
+        #print(score)
+        row = (l[0], f'{l[1]}.{l[2]} com.{l[3]} - {l[4]}', score)
+        result.append(row)
+
+    result.sort(key=lambda x: x[2], reverse=True)
+    
+    return jsonify(result)
+
 
 if __name__=='__main__': 
     app.run(debug=True)
