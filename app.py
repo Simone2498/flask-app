@@ -20,8 +20,8 @@ def create_conn():
 	  database="legal",
 	  port = 25060)
 
-mydb = create_conn()
-mycursor = mydb.cursor()
+#mydb = create_conn()
+#mycursor = mydb.cursor()
 
 with open('./my_vocabulary.txt', 'r') as infile:
     my_vocabulary = json.load(infile)
@@ -96,7 +96,7 @@ def Rocchio(q0, R, NR):
 
 @app.route('/')
 def hello_world(): 
-    return 'Hello World V.1!'
+    return 'Hello World V.1.1!'
 
 @app.route('/encode', methods=['GET','POST'])
 def encoding():
@@ -115,8 +115,11 @@ def search():
         NR = json.loads(request.form.get('NR'))
         tf_idf = Rocchio(tf_idf, R, NR)
 	
-    mycursor.execute("SELECT id, chapter, article, sub_article, article_title, tfidf FROM gdpr_enc")
-    myresult = mycursor.fetchall()
+    mydb = create_conn()
+    with mydb.cursor() as mycursor:
+        mycursor.execute("SELECT id, chapter, article, sub_article, article_title, tfidf FROM gdpr_enc")
+        myresult = mycursor.fetchall()
+    mydb.close()
 
     result = []
     for l in myresult:
@@ -131,18 +134,22 @@ def search():
 @app.route('/get_info', methods=['GET','POST'])
 def get_info():
     id = request.form.get('id')
-    
-    mycursor.execute("SELECT id, chapter, chapter_title, article, article_title, sub_article, gdpr_text, href FROM gdpr_enc WHERE id = %s", (id,))
-    myresult = mycursor.fetchall()
-	
+    mydb = create_conn()
+    with mydb.cursor() as mycursor:
+        mycursor.execute("SELECT id, chapter, chapter_title, article, article_title, sub_article, gdpr_text, href FROM gdpr_enc WHERE id = %s", (id,))
+        myresult = mycursor.fetchall()
+	mydb.close()
+
     return jsonify(myresult[0])
 
 @app.route('/key_search', methods=['GET','POST'])
 def key_search():
     tf_idf = json.loads(request.form.get('enc'))
-    	
-    mycursor.execute("SELECT id, chapter, article, sub_article, article_title, tfidf FROM gdpr_enc")
-    myresult = mycursor.fetchall()
+    mydb = create_conn()
+    with mydb.cursor() as mycursor:	
+        mycursor.execute("SELECT id, chapter, article, sub_article, article_title, tfidf FROM gdpr_enc")
+        myresult = mycursor.fetchall()
+    mydb.close()
 
     result = []
     for l in myresult:
