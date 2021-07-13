@@ -138,7 +138,7 @@ def get_info():
     with mydb.cursor() as mycursor:
         mycursor.execute("SELECT id, chapter, chapter_title, article, article_title, sub_article, gdpr_text, href FROM gdpr_enc WHERE id = %s", (id,))
         myresult = mycursor.fetchall()
-	mydb.close()
+    mydb.close()
 
     return jsonify(myresult[0])
 
